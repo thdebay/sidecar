@@ -336,15 +336,14 @@ class Package
         // a writeable local disk!
         $stream = fopen($path, 'w');
 
-        $options = new Archive;
-        $options->setEnableZip64(false);
-        $options->setOutputStream($stream);
+        $zip = new ZipStream(
+            outputStream: $stream,
+            enableZip64: false,
+        );
 
-        $zip = new ZipStream($name = null, $options);
-
-        // Set the time to now so that hashes are
-        // stable during testing.
-        $options = tap(new FileOptions)->setTime(Carbon::now());
+//        // Set the time to now so that hashes are
+//        // stable during testing.
+//        $options = tap(new FileOptions)->setTime(Carbon::now());
 
         foreach ($this->files() as $file) {
             // Add the base path so that ZipStream can
@@ -354,19 +353,20 @@ class Package
             // Remove the base path so that everything inside
             // the zip is relative to the project root.
             $zip->addFileFromPath(
-                $this->normalizeSeparators($this->removeBasePath($file)), $file, $options
+                $this->normalizeSeparators($this->removeBasePath($file)),
+                $file
             );
         }
 
         foreach ($this->exactIncludes as $source => $destination) {
             $zip->addFileFromPath(
-                $this->normalizeSeparators($destination), $source, $options
+                $this->normalizeSeparators($destination), $source
             );
         }
 
         foreach ($this->stringContents as $destination => $stringContent) {
             $zip->addFile(
-                $this->normalizeSeparators($destination), $stringContent, $options
+                $this->normalizeSeparators($destination), $stringContent
             );
         }
 
